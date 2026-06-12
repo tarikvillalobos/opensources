@@ -1,20 +1,10 @@
 import type { MotionMeta } from "@/registry/types";
+import { text, color, bg } from "@/registry/lib/fields";
 import Odometer from "./odometer";
 
 export const meta: MotionMeta = {
-  id: "odometer",
-  name: "Odometer",
-  category: "counter",
-  base: 4,
-  format: "square",
-  Comp: Odometer,
-  fields: [
-    { key: "value", labelKey: "number", type: "text" },
-    { key: "prefix", labelKey: "prefix", type: "text" },
-    { key: "label", labelKey: "caption", type: "text" },
-    { key: "color", labelKey: "text", type: "color" },
-    { key: "accent", labelKey: "caption", type: "color" },
-    { key: "bg", labelKey: "bg", type: "bg" },
-  ],
+  id: "odometer", name: "Odometer", category: "counter",
+  base: 4, format: "square", Comp: Odometer,
+  fields: [text("value", "number"), text("prefix", "prefix"), text("label", "caption"), color("color", "text"), color("accent", "caption"), bg()],
   defaults: { value: "1000000", prefix: "", label: "downloads", color: "#ffffff", accent: "#c8ff2d", bg: "#0a0a0a" },
 };

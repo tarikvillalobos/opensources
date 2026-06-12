@@ -1,8 +1,9 @@
 "use client";
 import type { MotionRenderProps } from "@/registry/types";
+import { lines } from "@/registry/lib/text";
 
 export default function Checklist({ p, dur }: MotionRenderProps) {
-  const items = String(p.text || "").split("\n").filter(Boolean);
+  const items = lines(p.text, true);
   return (
     <div className="m-center" style={{ alignContent: "center", padding: "11cqmin" }}>
       <div style={{ display: "flex", flexDirection: "column", gap: "3.4cqmin", width: "100%" }}>

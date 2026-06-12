@@ -1,13 +1,14 @@
 "use client";
 import type { MotionRenderProps } from "@/registry/types";
 import { rich } from "@/registry/lib/rich-text";
+import { lines } from "@/registry/lib/text";
 
 export default function BigQuote({ p, dur }: MotionRenderProps) {
-  const lines = String(p.text || "").split("\n");
+  const rows = lines(p.text);
   return (
     <div className="m-center" style={{ alignContent: "center", justifyItems: "start", padding: "11cqmin" }}>
       <div style={{ fontWeight: 600, fontSize: "13cqmin", color: p.color, lineHeight: 1.08, letterSpacing: "-.03em", textAlign: "left" }}>
-        {lines.map((l, i) => (
+        {rows.map((l, i) => (
           <div key={i} style={{ overflow: "hidden" }}>
             <div style={{ animation: `kWordUp ${dur}s var(--ease) ${(i * dur * 0.07).toFixed(2)}s infinite both` }}>{rich(l, p.accent)}</div>
           </div>

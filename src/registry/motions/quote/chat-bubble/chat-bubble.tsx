@@ -1,8 +1,9 @@
 "use client";
 import type { MotionRenderProps } from "@/registry/types";
+import { lines } from "@/registry/lib/text";
 
 export default function ChatBubble({ p, dur }: MotionRenderProps) {
-  const msgs = String(p.text || "").split("\n").filter(Boolean);
+  const msgs = lines(p.text, true);
   return (
     <div className="m-center" style={{ alignContent: "center", padding: "8cqmin" }}>
       <div style={{ display: "flex", flexDirection: "column", gap: "2.4cqmin", width: "100%" }}>

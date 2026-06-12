@@ -1,8 +1,9 @@
 "use client";
 import type { MotionRenderProps } from "@/registry/types";
+import { csv } from "@/registry/lib/text";
 
 export default function PillPop({ p, dur }: MotionRenderProps) {
-  const items = String(p.text || "").split(",").map((s) => s.trim()).filter(Boolean);
+  const items = csv(p.text);
   return (
     <div className="m-center">
       <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "2.4cqmin", maxWidth: "84cqw" }}>

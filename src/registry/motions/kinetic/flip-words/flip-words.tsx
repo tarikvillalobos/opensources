@@ -1,9 +1,10 @@
 "use client";
 import type { MotionRenderProps } from "@/registry/types";
 import { useStep } from "@/registry/lib/use-motion-timing";
+import { csv } from "@/registry/lib/text";
 
 export default function FlipWords({ p, dur }: MotionRenderProps) {
-  const opts = String(p.words || "").split(",").map((s) => s.trim()).filter(Boolean);
+  const opts = csv(p.words);
   const i = useStep(opts.length || 1, dur * 0.6);
   return (
     <div className="m-center">

@@ -1,16 +1,17 @@
 "use client";
 import type { MotionRenderProps } from "@/registry/types";
+import { lines } from "@/registry/lib/text";
 
 export default function WordRise({ p, dur }: MotionRenderProps) {
   const accent = p.accent || p.color;
-  const lines = String(p.text || "").split("\n");
+  const rows = lines(p.text);
   let idx = 0;
   return (
     <div className="m-center" style={{ alignContent: "center" }}>
       <div style={{ display: "flex", flexDirection: "column", gap: ".08em", alignItems: "center",
         fontWeight: 600, fontSize: "13cqmin", lineHeight: 1.02, letterSpacing: "-.03em",
         color: p.color, textAlign: "center" }}>
-        {lines.map((line, li) => {
+        {rows.map((line, li) => {
           let hl = false;
           return (
             <div key={li} style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "0 .28em" }}>
