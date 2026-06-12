@@ -1,9 +1,10 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import type { CatalogItem, MotionProps, Format } from "@/catalog/types";
 import { FONTS, FONT_OPTS, TEXT_COLORS, BG_COLORS } from "@/catalog/lib/fonts";
 import { snippetFor } from "@/lib/snippet";
+import { exportMotion, type ExportKind } from "@/lib/export";
 import { Icon, Ticks } from "@/components/ui/icon";
 import { Stage } from "./stage";
 import { useRouter } from "@/i18n/navigation";
@@ -37,6 +38,7 @@ export function EditorScreen({ item }: { item: CatalogItem }) {
   const tExport = useTranslations("export");
   const tToasts = useTranslations("toasts");
   const router = useRouter();
+  const stageWrap = useRef<HTMLDivElement>(null);
 
   const motion = item.motion;
   const init = (): MotionProps => ({ _font: "geist", _upper: false, _scale: 1, ...item.props });
@@ -56,17 +58,26 @@ export function EditorScreen({ item }: { item: CatalogItem }) {
     setTimeout(() => setToasts((ts) => ts.filter((x) => x.id !== id)), 2600);
   };
 
-  const doExport = (fmt: string) => {
+  const doExport = async (fmt: ExportKind) => {
+    const stage = stageWrap.current?.querySelector<HTMLElement>(".stage");
+    if (!stage) return;
     setExp({ fmt, pct: 0, name: motion.name });
-    let pct = 0;
-    const id = setInterval(() => {
-      pct += Math.random() * 16 + 6;
-      if (pct >= 100) {
-        clearInterval(id);
-        setExp({ fmt, pct: 100, name: motion.name });
-        setTimeout(() => { setExp(null); toast(tToasts("downloaded", { name: motion.name, fmt }), "download"); }, 420);
-      } else setExp({ fmt, pct, name: motion.name });
-    }, 180);
+    try {
+      await exportMotion(fmt, {
+        node: stage,
+        format,
+        durationSec: motion.base / (speed || 1),
+        name: motion.name,
+        onProgress: (frac) =>
+          setExp({ fmt, pct: Math.round(frac * 100), name: motion.name }),
+      });
+      setExp(null);
+      toast(tToasts("downloaded", { name: motion.name, fmt }), "download");
+    } catch (e) {
+      console.error(e);
+      setExp(null);
+      toast(tToasts("exportFailed", { fmt: fmt.toUpperCase() }), "close");
+    }
   };
 
   const showCode = () => setCode({ title: motion.name, text: snippetFor(motion, props, speed, format) });
@@ -92,7 +103,7 @@ export function EditorScreen({ item }: { item: CatalogItem }) {
           </div>
           <button className="icon-btn" onClick={reset} title={t("reset")}><Icon k="reset" size={15} /></button>
         </div>
-        <div className="ed-stage-wrap frame">
+        <div className="ed-stage-wrap frame" ref={stageWrap}>
           <Ticks />
           <Stage motion={motion} props={props} speed={speed} format={format} />
         </div>

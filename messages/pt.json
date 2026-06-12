@@ -63,7 +63,8 @@
   },
   "toasts": {
     "downloaded": "{name}.{fmt} baixado",
-    "codeCopied": "Código copiado"
+    "codeCopied": "Código copiado",
+    "exportFailed": "Falha ao exportar {fmt}"
   },
   "footer": {
     "license": "open · MIT · {year}"
