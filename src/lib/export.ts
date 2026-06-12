@@ -20,7 +20,19 @@ interface ExportArgs {
   fps?: number;
   name: string;
   onProgress?: (frac: number) => void;
+  signal?: AbortSignal;
 }
+
+export class ExportCancelled extends Error {
+  constructor() {
+    super("export cancelled");
+    this.name = "ExportCancelled";
+  }
+}
+
+const throwIfAborted = (signal?: AbortSignal) => {
+  if (signal?.aborted) throw new ExportCancelled();
+};
 
 const nextPaint = () =>
   new Promise<void>((res) =>
@@ -40,6 +52,7 @@ async function captureFrames(
   fps: number,
   onFrame: (canvas: HTMLCanvasElement, index: number, total: number) => Promise<void>,
   onProgress?: (frac: number) => void,
+  signal?: AbortSignal,
 ) {
   const { toCanvas } = await import("html-to-image");
   const total = Math.max(1, Math.round(durationSec * fps));
@@ -57,6 +70,7 @@ async function captureFrames(
 
   try {
     for (let i = 0; i < total; i++) {
+      throwIfAborted(signal);
       const t = (i / total) * durMs;
       anims.forEach((a) => {
         try {
@@ -100,59 +114,73 @@ const slug = (s: string) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "") || "motion";
 
-async function exportMp4({ node, format, durationSec, fps = 30, name, onProgress }: ExportArgs) {
+async function exportMp4({ node, format, durationSec, fps = 30, name, onProgress, signal }: ExportArgs) {
   const { FFmpeg } = await import("@ffmpeg/ffmpeg");
   const { toBlobURL } = await import("@ffmpeg/util");
   const { w, h } = FORMAT_DIMS[format];
 
   const ff = new FFmpeg();
-  const base = "https://unpkg.com/@ffmpeg/core@0.12.10/dist/umd";
-  await ff.load({
-    coreURL: await toBlobURL(`${base}/ffmpeg-core.js`, "text/javascript"),
-    wasmURL: await toBlobURL(`${base}/ffmpeg-core.wasm`, "application/wasm"),
-  });
+  const onAbort = () => {
+    try {
+      ff.terminate();
+    } catch {}
+  };
+  signal?.addEventListener("abort", onAbort);
 
-  await captureFrames(
-    node,
-    w,
-    h,
-    durationSec,
-    fps,
-    async (canvas, i) => {
-      const blob: Blob = await new Promise((res) =>
-        canvas.toBlob((b) => res(b!), "image/png"),
-      );
-      const buf = new Uint8Array(await blob.arrayBuffer());
-      await ff.writeFile(`f${String(i).padStart(5, "0")}.png`, buf);
-    },
-    onProgress,
-  );
+  try {
+    const base = "https://unpkg.com/@ffmpeg/core@0.12.10/dist/umd";
+    await ff.load({
+      coreURL: await toBlobURL(`${base}/ffmpeg-core.js`, "text/javascript"),
+      wasmURL: await toBlobURL(`${base}/ffmpeg-core.wasm`, "application/wasm"),
+    });
+    throwIfAborted(signal);
 
-  ff.on("progress", ({ progress }) =>
-    onProgress?.(0.7 + Math.min(1, Math.max(0, progress)) * 0.3),
-  );
+    await captureFrames(
+      node,
+      w,
+      h,
+      durationSec,
+      fps,
+      async (canvas, i) => {
+        const blob: Blob = await new Promise((res) =>
+          canvas.toBlob((b) => res(b!), "image/png"),
+        );
+        const buf = new Uint8Array(await blob.arrayBuffer());
+        await ff.writeFile(`f${String(i).padStart(5, "0")}.png`, buf);
+      },
+      onProgress,
+      signal,
+    );
 
-  await ff.exec([
-    "-framerate",
-    String(fps),
-    "-i",
-    "f%05d.png",
-    "-c:v",
-    "libx264",
-    "-pix_fmt",
-    "yuv420p",
-    "-movflags",
-    "+faststart",
-    "out.mp4",
-  ]);
+    ff.on("progress", ({ progress }) =>
+      onProgress?.(0.7 + Math.min(1, Math.max(0, progress)) * 0.3),
+    );
 
-  const data = await ff.readFile("out.mp4");
-  const bytes = data as Uint8Array;
-  download(new Blob([bytes.buffer as ArrayBuffer], { type: "video/mp4" }), `${slug(name)}.mp4`);
-  onProgress?.(1);
+    await ff.exec([
+      "-framerate",
+      String(fps),
+      "-i",
+      "f%05d.png",
+      "-c:v",
+      "libx264",
+      "-pix_fmt",
+      "yuv420p",
+      "-movflags",
+      "+faststart",
+      "out.mp4",
+    ]);
+    throwIfAborted(signal);
+
+    const data = await ff.readFile("out.mp4");
+    const bytes = data as Uint8Array;
+    download(new Blob([bytes.buffer as ArrayBuffer], { type: "video/mp4" }), `${slug(name)}.mp4`);
+    onProgress?.(1);
+  } finally {
+    signal?.removeEventListener("abort", onAbort);
+  }
 }
 
-async function exportGif({ node, format, durationSec, fps = 20, name, onProgress }: ExportArgs) {
+async function exportGif({ node, format, durationSec, fps = 20, name, onProgress, signal }: ExportArgs) {
   const { GIFEncoder, quantize, applyPalette } = await import("gifenc");
   // Cap GIF resolution — full social dims make GIFs huge and slow.
   const dim = FORMAT_DIMS[format];
@@ -178,8 +206,10 @@ async function exportGif({ node, format, durationSec, fps = 20, name, onProgress
       gif.writeFrame(index, canvas.width, canvas.height, { palette, delay });
     },
     onProgress,
+    signal,
   );
 
+  throwIfAborted(signal);
   gif.finish();
   const bytes = gif.bytes();
   download(new Blob([bytes.buffer as ArrayBuffer], { type: "image/gif" }), `${slug(name)}.gif`);

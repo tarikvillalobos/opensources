@@ -59,12 +59,14 @@
   },
   "export": {
     "rendering": "Rendering {fmt}",
-    "spec": "{name} · 1080×1080 · 30fps"
+    "spec": "{name} · 1080×1080 · 30fps",
+    "cancel": "Cancel"
   },
   "toasts": {
     "downloaded": "{name}.{fmt} downloaded",
     "codeCopied": "Code copied",
-    "exportFailed": "Failed to export {fmt}"
+    "exportFailed": "Failed to export {fmt}",
+    "exportCancelled": "{fmt} export cancelled"
   },
   "footer": {
     "license": "open · MIT · {year}"

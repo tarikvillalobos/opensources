@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import type { CatalogItem, MotionProps, Format } from "@/catalog/types";
 import { FONTS, FONT_OPTS, TEXT_COLORS, BG_COLORS } from "@/catalog/lib/fonts";
 import { snippetFor } from "@/lib/snippet";
-import { exportMotion, type ExportKind } from "@/lib/export";
+import { exportMotion, ExportCancelled, type ExportKind } from "@/lib/export";
 import { Icon, Ticks } from "@/components/ui/icon";
 import { Stage } from "./stage";
 import { useRouter } from "@/i18n/navigation";
@@ -39,6 +39,7 @@ export function EditorScreen({ item }: { item: CatalogItem }) {
   const tToasts = useTranslations("toasts");
   const router = useRouter();
   const stageWrap = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   const motion = item.motion;
   const init = (): MotionProps => ({ _font: "geist", _upper: false, _scale: 1, ...item.props });
@@ -61,6 +62,8 @@ export function EditorScreen({ item }: { item: CatalogItem }) {
   const doExport = async (fmt: ExportKind) => {
     const stage = stageWrap.current?.querySelector<HTMLElement>(".stage");
     if (!stage) return;
+    const ctrl = new AbortController();
+    abortRef.current = ctrl;
     setExp({ fmt, pct: 0, name: motion.name });
     try {
       await exportMotion(fmt, {
@@ -68,17 +71,26 @@ export function EditorScreen({ item }: { item: CatalogItem }) {
         format,
         durationSec: motion.base / (speed || 1),
         name: motion.name,
+        signal: ctrl.signal,
         onProgress: (frac) =>
           setExp({ fmt, pct: Math.round(frac * 100), name: motion.name }),
       });
       setExp(null);
       toast(tToasts("downloaded", { name: motion.name, fmt }), "download");
     } catch (e) {
-      console.error(e);
       setExp(null);
-      toast(tToasts("exportFailed", { fmt: fmt.toUpperCase() }), "close");
+      if (e instanceof ExportCancelled) {
+        toast(tToasts("exportCancelled", { fmt: fmt.toUpperCase() }), "close");
+      } else {
+        console.error(e);
+        toast(tToasts("exportFailed", { fmt: fmt.toUpperCase() }), "close");
+      }
+    } finally {
+      abortRef.current = null;
     }
   };
+
+  const cancelExport = () => abortRef.current?.abort();
 
   const showCode = () => setCode({ title: motion.name, text: snippetFor(motion, props, speed, format) });
   const copyCode = () => {
@@ -212,6 +224,11 @@ export function EditorScreen({ item }: { item: CatalogItem }) {
             </div>
             <div style={{ fontSize: 12.5, color: "var(--dim)", margin: "8px 0 14px" }}>{tExport("spec", { name: exp.name })}</div>
             <div className="toast-prog"><i style={{ width: Math.min(100, exp.pct) + "%" }} /></div>
+            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16 }}>
+              <button className="btn sm ghost" onClick={cancelExport}>
+                <Icon k="close" size={14} /> {tExport("cancel")}
+              </button>
+            </div>
           </div>
         </div>
       )}
