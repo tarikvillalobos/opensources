@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import type { CatalogItem, MotionProps, Format } from "@/registry/types";
-import { FONTS, FONT_OPTS, TEXT_COLORS, BG_COLORS } from "@/registry/lib/fonts";
+import type { CatalogItem, MotionProps, Format } from "@/catalog/types";
+import { FONTS, FONT_OPTS, TEXT_COLORS, BG_COLORS } from "@/catalog/lib/fonts";
 import { snippetFor } from "@/lib/snippet";
 import { Icon, Ticks } from "@/components/ui/icon";
 import { Stage } from "./stage";

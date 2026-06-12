@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { CATALOG, PAGE_SIZES } from "@/registry";
-import { CATEGORIES } from "@/registry/categories";
+import { CATALOG, PAGE_SIZES } from "@/catalog";
+import { CATEGORIES } from "@/catalog/categories";
 import { Icon, Ticks } from "@/components/ui/icon";
 import { MotionCard } from "./motion-card";
 

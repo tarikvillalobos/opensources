@@ -1,6 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
-import type { CatalogItem } from "@/registry/types";
-import { MOTIONS, getMotion } from "@/registry";
+import type { CatalogItem } from "@/catalog/types";
+import { MOTIONS, getMotion } from "@/catalog";
 import { EditorScreen } from "@/components/editor/editor-screen";
 
 export default async function CreatePage({

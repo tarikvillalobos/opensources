@@ -1,7 +1,7 @@
 "use client";
 import type { CSSProperties } from "react";
-import type { MotionMeta, MotionProps, Format } from "@/registry/types";
-import { FONTS } from "@/registry/lib/fonts";
+import type { MotionMeta, MotionProps, Format } from "@/catalog/types";
+import { FONTS } from "@/catalog/lib/fonts";
 
 /** Live preview surface — renders any motion at any size via container queries. */
 export function Stage({

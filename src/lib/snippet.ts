@@ -1,4 +1,4 @@
-import type { MotionMeta, MotionProps } from "@/registry/types";
+import type { MotionMeta, MotionProps } from "@/catalog/types";
 
 /** Build the `npx opensources add` + usage snippet shown in the code modal. */
 export function snippetFor(

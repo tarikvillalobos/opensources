@@ -1,6 +1,6 @@
 "use client";
 import { useTranslations } from "next-intl";
-import type { CatalogItem } from "@/registry/types";
+import type { CatalogItem } from "@/catalog/types";
 import { Icon } from "@/components/ui/icon";
 import { Stage } from "@/components/editor/stage";
 import { useRouter } from "@/i18n/navigation";

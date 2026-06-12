@@ -1,8 +1,8 @@
 "use client";
 import { useTranslations } from "next-intl";
-import type { CatalogItem } from "@/registry/types";
-import { MOTIONS, CATALOG, getMotion } from "@/registry";
-import { CATEGORIES } from "@/registry/categories";
+import type { CatalogItem } from "@/catalog/types";
+import { MOTIONS, CATALOG, getMotion } from "@/catalog";
+import { CATEGORIES } from "@/catalog/categories";
 import { Icon, Ticks } from "@/components/ui/icon";
 import { Stage } from "@/components/editor/stage";
 import { MotionCard } from "./motion-card";
